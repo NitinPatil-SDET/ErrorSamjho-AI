@@ -6,12 +6,12 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 
-# Find the .env file from the current Python file location
 BASE_DIR = Path(__file__).resolve().parent
 ENV_FILE = BASE_DIR / ".env"
 
-# Override any old Windows environment variable
-load_dotenv(dotenv_path=ENV_FILE, override=True)
+# Load .env only during local development
+if ENV_FILE.exists():
+    load_dotenv(dotenv_path=ENV_FILE, override=True)
 
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
@@ -28,20 +28,16 @@ GROQ_MODEL = os.getenv(
 
 
 def validate_configuration():
-    if not ENV_FILE.exists():
-        raise ValueError(
-            f".env file was not found at: {ENV_FILE}"
-        )
-
     if not GROQ_API_KEY:
         raise ValueError(
-            "GROQ_API_KEY is missing or empty in the .env file."
+            "GROQ_API_KEY is missing. Add it to the local .env file "
+            "or Streamlit Cloud secrets."
         )
 
     if not GROQ_API_KEY.startswith("gsk_"):
         raise ValueError(
-            "GROQ_API_KEY does not look valid. "
-            "A Groq API key should normally start with 'gsk_'."
+            "GROQ_API_KEY is invalid. A Groq API key should "
+            "normally start with 'gsk_'."
         )
 
 
@@ -51,9 +47,6 @@ def create_groq_client():
     return OpenAI(
         api_key=GROQ_API_KEY,
         base_url=GROQ_BASE_URL,
-        http_client=httpx.Client(
-            verify=False,
-            timeout=30.0,
-        ),
+        timeout=30.0,
         max_retries=2,
     )
