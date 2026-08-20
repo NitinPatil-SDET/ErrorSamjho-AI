@@ -1,10 +1,22 @@
-from ai_service import explain_error
+import pytest
+
+from ai_service import RateLimiter, explain_error
 
 
 sample_error = """
 2026/08/14 15:45:13 - Get Files From Server.0 - File 'BankSapReconUploadFiles1.zip not found on server.
  
 """
+
+
+def test_rate_limiter_blocks_extra_requests_within_window():
+    limiter = RateLimiter(max_calls=2, window_seconds=60)
+
+    assert limiter.acquire() is True
+    assert limiter.acquire() is True
+
+    with pytest.raises(RuntimeError, match="Rate limit"):
+        limiter.acquire()
 
 
 def main():

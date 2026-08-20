@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 
-import httpx
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -12,6 +11,14 @@ ENV_FILE = BASE_DIR / ".env"
 # Load .env only during local development
 if ENV_FILE.exists():
     load_dotenv(dotenv_path=ENV_FILE, override=True)
+
+
+def _get_int_env(name, default):
+    value = os.getenv(name, str(default)).strip()
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
 
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
@@ -25,6 +32,12 @@ GROQ_MODEL = os.getenv(
     "GROQ_MODEL",
     "openai/gpt-oss-20b",
 ).strip()
+
+MAX_SESSION_REQUESTS = _get_int_env("MAX_SESSION_REQUESTS", 8)
+API_REQUEST_COOLDOWN_SECONDS = _get_int_env("API_REQUEST_COOLDOWN_SECONDS", 10)
+DUPLICATE_REQUEST_WINDOW_SECONDS = _get_int_env("DUPLICATE_REQUEST_WINDOW_SECONDS", 30)
+MAX_ERROR_LOG_LENGTH = _get_int_env("MAX_ERROR_LOG_LENGTH", 20000)
+MIN_ERROR_LOG_LENGTH = _get_int_env("MIN_ERROR_LOG_LENGTH", 10)
 
 
 def validate_configuration():
